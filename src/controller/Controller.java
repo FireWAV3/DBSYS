@@ -20,7 +20,7 @@ public class Controller {
         try {
 
             //TODO dosen't work
-            DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
+            //DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
             String url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"; // String für DB-Connection
             conn = DriverManager.getConnection(url, name, password);
             stmt = conn.createStatement();
@@ -88,13 +88,14 @@ public class Controller {
                     "    , dbsys03.Ferienwohnung fwo\n" +
                     "    WHERE fwo.fName = x.Name\n" +
                     "ORDER BY x.SternDurchschnitt DESC\n" +
-                    "    ;");
+                    "    ; commit;");
 
             //booking sql command
             //mail,fID,startD,endD
             booking = conn.prepareStatement(
                     "INSERT INTO dbsys03.Buchung(buchungsNr,email,fID,bDatum,startDate,endDate) " +
-                        "VALUES ((SELECT ISNULL(MAX(dbsys03.buchungsNr) + 1, 1) FROM Buchung),?,?,CURRENT_DATE,?,?);");
+                        "VALUES ((SELECT ISNULL(MAX(dbsys03.buchungsNr) + 1, 1) FROM Buchung),?,?,CURRENT_DATE,?,?);" +
+                            "commit;");
 
             //get länder sql command
             land = conn.prepareStatement("SELECT land From dbsys03.Land;");
@@ -189,7 +190,7 @@ public class Controller {
         }
     }
 
-    public Object[] getLand() {
+    public Object[] getLand() throws SQLException {
         ArrayList<String> temp = new ArrayList<String>();
         try {
             ResultSet rs = land.executeQuery();
@@ -206,7 +207,9 @@ public class Controller {
     public Object[] getAusstattung() throws SQLException {
         ArrayList<String> temp = new ArrayList<String>();
         try {
+
             ResultSet rs = ausstattung.executeQuery();
+
             while (rs.next()){
                 temp.add(rs.getString("aName"));
                 System.out.println(rs.getString("aName"));

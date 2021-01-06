@@ -10,11 +10,10 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/Oracael_Driver" />
+          <root url="jar://$MODULE_DIR$/Oracael_Driver/ojdbc10.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-        <jarDirectory url="file://$MODULE_DIR$/Oracael_Driver" recursive="false" />
       </library>
     </orderEntry>
   </component>

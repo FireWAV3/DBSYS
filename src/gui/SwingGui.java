@@ -101,7 +101,7 @@ public class SwingGui extends JFrame implements ActionListener {
         options.setMaximumSize(new Dimension(800,100));
         options.setMinimumSize(new Dimension(800,100));
 
-       results.add(new Wohnung("2","name","500","1","infinit","Konne","5",this));
+        results.add(new Wohnung("2","name","500","1","infinit","Konne","5",this));
         results.add(new Wohnung("3","der name","5","100000","2","Konne","2",this));
         results.add(new Wohnung("4","der dasd","5","100000","2","Konne","3.5",this));
 
