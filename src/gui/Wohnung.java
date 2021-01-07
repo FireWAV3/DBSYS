@@ -33,7 +33,13 @@ public class Wohnung extends JPanel implements ActionListener {
         this.wsize = "Größe: " + wsize;
         this.price = "Preis pro Nacht: " + price+" €";
         this.stadt = "in: " + stadt;
-        this.sterne = "Sterne: " + sterne;
+        if(sterne.equals("-1")) {
+            this.sterne = "Sterne: -";
+        }else{
+            this.sterne = "Sterne: " + sterne;
+        }
+
+
         this.fID = fID;
         this.gui = gui;
 
@@ -73,9 +79,8 @@ public class Wohnung extends JPanel implements ActionListener {
         this.setMaximumSize(new Dimension(1080,150));
         this.setMinimumSize(new Dimension(1080,150));
 
-
-
         jbuchen.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
+        setVisible(true);
     }
 
     private void updateBuchen(boolean input) {
@@ -86,7 +91,6 @@ public class Wohnung extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == jbuchen)
             gui.buchen(fID);
-            gui.clearSearch();
             gui.updateSearchGlobal();
     }
 }

@@ -1,11 +1,15 @@
 package gui;
 import controller.Controller;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
+
+//Tom.Gaertner@temp.com
+//sesh#123
 public class SwingGui extends JFrame implements ActionListener {
 
 
@@ -64,10 +68,11 @@ public class SwingGui extends JFrame implements ActionListener {
         resultsscroll = new JScrollPane();
 
 
-        jEmail = new TextField("enter Mail");
-        jEmail.setMinimumSize(new Dimension(jEmail.getSize().height ,250));
-        jpasswd = new JPasswordField("*****");
-        jpasswd.setMinimumSize(new Dimension(jpasswd.getSize().height ,200));
+        jEmail = new TextField("Tom.Gaertner@temp.com");
+        jEmail.setMinimumSize(new Dimension(250,jEmail.getSize().height ));
+        jpasswd = new JPasswordField("sesh#123");
+        jpasswd.setMinimumSize(new Dimension( 200,jpasswd.getSize().height));
+        jpasswd.setSize(200,jpasswd.getSize().height);
         jloginbutton = new JButton("login");
         jloginbutton.addActionListener(this);
         jlogininfo = new JLabel("not logged in");
@@ -82,10 +87,10 @@ public class SwingGui extends JFrame implements ActionListener {
         login.setMinimumSize(new Dimension(800,100));
 
         jland = new JComboBox(c.getLand());
-        jarrival = new JTextField("00-00-0000");
-        jarrival.setMinimumSize(new Dimension(jarrival.getSize().height ,300));
-        jdeparture = new JTextField("00-00-0000");
-        jdeparture.setMinimumSize(new Dimension(jdeparture.getSize().height ,300));
+        jarrival = new JTextField("01-11-2021");
+        jarrival.setMinimumSize(new Dimension( 300,jarrival.getSize().height));
+        jdeparture = new JTextField("21-11-2021");
+        jdeparture.setMinimumSize(new Dimension(300,jdeparture.getSize().height));
         jausstattung = new JComboBox(c.getAusstattung());
         jsearch = new JButton("Search");
         jsearch.addActionListener(this);
@@ -100,11 +105,6 @@ public class SwingGui extends JFrame implements ActionListener {
         options.setLayout(flowLayoutoption);
         options.setMaximumSize(new Dimension(800,100));
         options.setMinimumSize(new Dimension(800,100));
-
-        results.add(new Wohnung("2","name","500","1","infinit","Konne","5",this));
-        results.add(new Wohnung("3","der name","5","100000","2","Konne","2",this));
-        results.add(new Wohnung("4","der dasd","5","100000","2","Konne","3.5",this));
-
 
         results.setBackground(new Color(166, 251, 255));
         results.setSize(400,400);
@@ -146,7 +146,8 @@ public class SwingGui extends JFrame implements ActionListener {
         }
     }
 
-    public void updateSearch(String pName,int pZimmer,int pSize, int pPrice,String pStadt,String pFID,int pSterne){
+    public void updateSearch(String pName,int pZimmer,int pSize, int pPrice,String pStadt,String pFID,String pSterne){
+        System.out.println("udate gui:"+pName+" "+pZimmer+" "+pSize+" "+pPrice+" "+pStadt+" "+pSterne+" ID:"+pFID);
 
         results.add(new Wohnung(pFID,
                 pName,
@@ -154,7 +155,8 @@ public class SwingGui extends JFrame implements ActionListener {
                 Integer.toString(pSize),
                 Integer.toString(pPrice),
                 pStadt,
-                Integer.toString(pSterne),this));
+                pSterne,this));
+
     }
 
     public void buchen(String fID) {
@@ -171,5 +173,7 @@ public class SwingGui extends JFrame implements ActionListener {
         if (!c.setSearch(jland.getSelectedItem().toString(), jausstattung.getSelectedItem().toString(), jarrival.getText(), jdeparture.getText())) {
             JOptionPane.showMessageDialog(this, "Search Failed");
         }
+        results.repaint();
+        this.repaint();
     }
 }

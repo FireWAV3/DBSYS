@@ -20,16 +20,18 @@ public class Controller {
         try {
 
             //TODO dosen't work
-            //DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
+            DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
             String url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"; // String für DB-Connection
             conn = DriverManager.getConnection(url, name, password);
             stmt = conn.createStatement();
-
+            conn.setAutoCommit(false);
         } catch (Exception e){
             throw new IllegalArgumentException(e.getMessage() + "\nNot able to connect");
         }
 
         try {
+
+
             //Land,Ausstattung,Land,Ausstattung,Land,Ausstattung,Land,Ausstattung, startD, endD, startD, endD, startD, endD
             //Search sql command
             search = conn.prepareStatement("SELECT DISTINCT fwo.fName, x.SternDurchschnitt as SternDurchschnitt\n" +
@@ -46,14 +48,14 @@ public class Controller {
                     "                    AND   au.aName =?\n" +
                     "        \n" +
                     "            UNION\n" +
-                    "                        SELECT  fw.fName as Name , 0 as SternU\n" +
+                    "                        SELECT  fw.fName as Name , -1 as SternU\n" +
                     "                        FROM dbsys03.Ferienwohnung fw ,dbsys03.Adresse ad, dbsys03.ausgestattet au\n" +
                     "                        WHERE fw.fID = au.fID\n" +
                     "                        AND   fw.aID = ad.aID\n" +
                     "                        AND   ad.land =?\n" +
                     "                        AND   au.aName =?\n" +
                     "                 MINUS\n" +
-                    "                         SELECT fw.fName as Name , 0 as SternU\n" +
+                    "                         SELECT fw.fName as Name , -1 as SternU\n" +
                     "                        FROM dbsys03.Ferienwohnung fw ,dbsys03.Adresse ad, dbsys03.ausgestattet au ,dbsys03.Buchung bu\n" +
                     "                        WHERE fw.fID = au.fID\n" +
                     "                        AND   fw.aID = ad.aID\n" +
@@ -74,9 +76,9 @@ public class Controller {
                     "                        AND fw.aID = ad.aID\n" +
                     "                        AND ad.land =?\n" +
                     "                        AND au.aName =?\n" +
-                    "                        AND (bu.startDate BETWEEN ? AND ?\n" +
+                    "                        AND ((bu.startDate BETWEEN ? AND ?\n" +
                     "                          OR bu.endDate BETWEEN ? AND ?)\n" +
-                    "                        OR (bu.startDate <= ? AND bu.endDate >= ?)\n" +
+                    "                        OR (bu.startDate <=? AND bu.endDate >=?))\n" +
                     "                        GROUP BY fw.fName\n" +
                     "                )x\n" +
                     "            ,dbsys03.Buchung bu\n" +
@@ -87,32 +89,30 @@ public class Controller {
                     "     )) x\n" +
                     "    , dbsys03.Ferienwohnung fwo\n" +
                     "    WHERE fwo.fName = x.Name\n" +
-                    "ORDER BY x.SternDurchschnitt DESC\n" +
-                    "    ; commit;");
+                    "ORDER BY x.SternDurchschnitt DESC");
 
             //booking sql command
             //mail,fID,startD,endD
             booking = conn.prepareStatement(
                     "INSERT INTO dbsys03.Buchung(buchungsNr,email,fID,bDatum,startDate,endDate) " +
-                        "VALUES ((SELECT ISNULL(MAX(dbsys03.buchungsNr) + 1, 1) FROM Buchung),?,?,CURRENT_DATE,?,?);" +
-                            "commit;");
+                        "VALUES ((SELECT (Max(buchungsNr)+1) FROM dbsys03.Buchung),?,?,CURRENT_DATE,?,?)");
 
             //get länder sql command
-            land = conn.prepareStatement("SELECT land From dbsys03.Land;");
+            land = conn.prepareStatement("SELECT land From dbsys03.Land");
 
             //get ausstattung sql command
-            ausstattung = conn.prepareStatement("SELECT aName FROM dbsys03.Ausstattung;");
+            ausstattung = conn.prepareStatement("SELECT aName FROM dbsys03.Ausstattung");
 
             //get login sql command
             login = conn.prepareStatement("SELECT count(email) FROM dbsys03.Kunde\n" +
                                                     "WHERE email =?\n" +
-                                                    "AND  passwort =?;");
+                                                    "AND  passwort =?");
 
             //get wohnug info sql command
             wohnunginfo = conn.prepareStatement("SELECT fname , anzZimmer, fSize, fPrize, ortsname, fid\n" +
                                                     "FROM dbsys03.Adresse ad, dbsys03.Ferienwohnung f\n" +
                                                     "WHERE ad.aID = f.aID \n" +
-                                                    "AND fName = ?;");
+                                                    "AND fName = ?");
 
         }catch (SQLException e){
             throw new IllegalArgumentException(e.getMessage() + "\nNot able to compile a sql command");
@@ -125,14 +125,17 @@ public class Controller {
 
   public boolean setBoocking(String mail, String fID, String stratD, String endD) {
         try {
+            System.out.println("\n boocking with: "+mail+" "+fID+" "+stratD+" "+endD);
             booking.setString(1,mail);
             booking.setString(2,fID);
             booking.setString(3,stratD);
             booking.setString(4,endD);
 
             booking.executeQuery();
+            conn.commit();
             return true;
         }catch (SQLException throwables){
+            System.out.println(throwables.getMessage() +  "  booking");
             try {
                 conn.rollback();
             } catch (SQLException e) {
@@ -162,31 +165,28 @@ public class Controller {
 
           ResultSet rs = search.executeQuery();
           gui.clearSearch();
-
           while (rs.next()){
-              updateGuiSearch(rs.getString(1),rs.getInt(2));
+              updateGuiSearch(rs.getString(1),rs.getString(2));
           }
           return true;
       } catch (SQLException throwables) {
-          try {
-              conn.rollback();
-          } catch (SQLException e) {
-              System.out.println("rollback Failed");
-          }
+          System.out.println(throwables.getMessage());
           return false;
       }
   }
 
-    private void updateGuiSearch(String string, int sterne) {
+    private void updateGuiSearch(String string, String sterne) {
         try{
             wohnunginfo.setString(1,string);
-
             ResultSet rs = wohnunginfo.executeQuery();
+            rs.next();
+
             gui.updateSearch(rs.getString(1),rs.getInt(2),
                     rs.getInt(3),rs.getInt(4),rs.getString(5),
                     rs.getString(6),sterne);
+
         }catch (SQLException throwables){
-            System.out.println("");
+            System.out.println(throwables.getMessage());
         }
     }
 
@@ -194,11 +194,11 @@ public class Controller {
         ArrayList<String> temp = new ArrayList<String>();
         try {
             ResultSet rs = land.executeQuery();
-            while (rs.next()) {
-                temp.add(rs.getString("land"));
+             while (rs.next()) {
+                temp.add(rs.getString(1));
             }
         } catch (SQLException throwables) {
-            String temp2[] = {"test","test"};
+            String temp2[] = {"NULL","NULL"};
             return temp2;
         }
         return temp.toArray();
@@ -207,27 +207,31 @@ public class Controller {
     public Object[] getAusstattung() throws SQLException {
         ArrayList<String> temp = new ArrayList<String>();
         try {
-
             ResultSet rs = ausstattung.executeQuery();
-
             while (rs.next()){
                 temp.add(rs.getString("aName"));
-                System.out.println(rs.getString("aName"));
             }
         } catch (SQLException throwables) {
-            String temp2[] = {"test","test"};
+            String temp2[] = {"NULL","NULL"};
             return temp2;
         }
         return temp.toArray();
     }
 
     public boolean testLogin(String text, char[] password) {
+
         try {
+            login.setString(1,text);
+            login.setString(2,new String(password));
             ResultSet rs = login.executeQuery();
+            rs.next();
             if(rs.getInt(1) == 1){
                 return true;
-            }else return false;
+            }else{
+                return false;
+            }
         }catch (SQLException throwables){
+            System.out.println(throwables.getMessage());
             return false;
         }
     }
