@@ -175,5 +175,6 @@ public class SwingGui extends JFrame implements ActionListener {
         }
         results.repaint();
         this.repaint();
+        revalidate();
     }
 }
